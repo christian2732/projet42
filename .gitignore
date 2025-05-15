@@ -1,0 +1,32 @@
+# Fichiers Python
+*.pyc
+*.pyo
+__pycache__/
+
+# Fichiers d'environnement
+.env
+*.env
+
+# Dossier de virtualenv (ne jamais versionner)
+venv/
+.venv/
+
+# Cache
+*.log
+*.sqlite3
+*.db
+.DS_Store
+
+# VSCode
+.vscode/
+
+# Streamlit
+.streamlit/
+
+# Dossiers tests éventuels
+htmlcov/
+pytest_cache/
+
+# Autres
+*.bak
+*.swp
