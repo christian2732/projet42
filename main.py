@@ -8,18 +8,17 @@ from dotenv import load_dotenv
 # Importer directement les fichiers Python situés à la racine
 import ingest
 import visualization
-import stock  # Assurez-vous que ce fichier existe bien
+import stock  # ⚠️ Assurez-vous que ce fichier contient un APIRouter nommé `router`
 
+# ─── Création de l'application FastAPI ─────────────────────────────────────────
 app = FastAPI(
     title="Bourse API 🚀",
     description="API de collecte et visualisation des indices boursiers",
     version="1.0.0",
 )
 
-# Charger les variables d'environnement depuis le fichier .env
+# ─── Chargement des variables d’environnement ──────────────────────────────────
 load_dotenv()
-
-# Lire le token à partir de l'environnement
 API_TOKEN = os.getenv("API_TOKEN")
 
 # ─── Métriques Prometheus ──────────────────────────────────────────────────────
@@ -41,7 +40,14 @@ def metrics():
     """Exposer les métriques Prometheus à /metrics"""
     return PlainTextResponse(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
-# ─── Inclure les routes ────────────────────────────────────────────────────────
+@app.get("/")
+def root():
+    """Page d'accueil de l'API"""
+    return {
+        "message": "Bienvenue sur l'API Bourse 🚀. Rendez-vous sur /docs pour explorer les endpoints."
+    }
+
+# ─── Inclusion des routes ──────────────────────────────────────────────────────
 app.include_router(ingest.router, prefix="/ingest", tags=["Data Ingestion"])
 app.include_router(visualization.router, prefix="/visualization", tags=["Data Visualization"])
 app.include_router(stock.router, tags=["Stock"])
