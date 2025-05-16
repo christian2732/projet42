@@ -9,35 +9,30 @@ API_URL = "https://api.twelvedata.com/time_series"
 
 
 async def fetch_and_store_data(symbols: list = ["AAPL", "MSFT", "GOOGL"]):
-    cache_key = f"stocks:latest:{symbol}"
-    
-    if redis_client.exists(cache_key):
-        print("✅ Données chargées depuis Redis.")
-        return json.loads(redis_client.get(cache_key))
+    """Stocke les données pour plusieurs symboles"""
+    for symbol in symbols:
+        cache_key = f"stocks:latest:{symbol.upper()}"
+        
+        params = {
+            "symbol": symbol,
+            "interval": "1day",
+            "outputsize": 30,
+            "apikey": os.getenv("API_TOKEN")
+        }
 
-    params = {
-        "symbol": symbol,
-        "interval": "1day",
-        "outputsize": 30,
-        "apikey": API_KEY
-    }
+        try:
+            response = requests.get(API_URL, params=params)
+            response.raise_for_status()
+            data = response.json()
 
-    try:
-        response = requests.get(API_URL, params=params)
-        response.raise_for_status()
-        data = response.json()
+            if "values" in data:
+                redis_client.set(cache_key, json.dumps(data["values"]), ex=timedelta(hours=6))
+                logger.info(f"✅ Données stockées pour {symbol}")
+            else:
+                logger.error(f"❌ Format invalide pour {symbol}: {data}")
 
-        if "values" in data:
-            redis_client.set(cache_key, json.dumps(data["values"]), ex=timedelta(hours=6))
-            print("✅ Données récupérées depuis Twelve Data et stockées dans Redis.")
-            return data["values"]
-        else:
-            print("❌ Erreur dans la réponse Twelve Data :", data)
-            return None
-
-    except requests.RequestException as e:
-        print(f"❌ Erreur requête Twelve Data : {e}")
-        return None
+        except Exception as e:
+            logger.error(f"❌ Erreur pour {symbol}: {str(e)}")
 
 if __name__ == "__main__":
     fetch_and_store_data()
