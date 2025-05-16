@@ -5,7 +5,7 @@ import os
 from datetime import timedelta
 
 redis_host = os.getenv("REDIS_HOST")
-redis_port = int(os.getenv("REDIS_PORT", 17982))
+redis_port = int(os.getenv("REDIS_PORT", 6379))
 
 redis_client = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)
 
