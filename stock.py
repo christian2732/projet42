@@ -3,7 +3,6 @@ import redis
 import requests
 import json
 import os
-import ssl
 
 router = APIRouter()
 
@@ -22,13 +21,13 @@ redis_client = redis.Redis(
     ssl_cert_reqs=None  # TLS sans vérification stricte de certificat
 )
 
-# API Twelve Data
-API_KEY = os.getenv("TWELVE_API_KEY", "your_twelve_data_api_key")  # à définir dans ton env
-API_URL =  f"https://api.twelvedata.com/time_series?symbol={symbol}&interval=1min&apikey={API_KEY}"
+# Clé API Twelve Data
+API_KEY = os.getenv("TWELVE_API_KEY", "your_twelve_data_api_key")
 
 @router.get("/data/stock/{symbol}", tags=["Stock"])
 def get_stock_by_symbol(symbol: str):
-    redis_key = f"stocks:latest:{symbol.upper()}"
+    symbol = symbol.upper()
+    redis_key = f"stocks:latest:{symbol}"
 
     # Vérifie d'abord si les données sont en cache
     if redis_client.exists(redis_key):
@@ -37,13 +36,13 @@ def get_stock_by_symbol(symbol: str):
 
     # Requête vers Twelve Data
     params = {
-        "symbol": symbol.upper(),
+        "symbol": symbol,
         "interval": "1day",
         "outputsize": 30,
         "apikey": API_KEY
     }
 
-    response = requests.get(API_URL, params=params)
+    response = requests.get("https://api.twelvedata.com/time_series", params=params)
 
     if response.status_code != 200:
         return {"error": "Erreur lors de la récupération depuis Twelve Data."}
