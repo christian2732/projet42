@@ -4,46 +4,43 @@ import json
 import os
 from datetime import timedelta
 
-# Connexion Redis (host et port à adapter selon ton environnement)
+# Connexion Redis (adapter host/port si nécessaire)
 redis_client = redis.Redis(host="redis", port=17982, decode_responses=True)
 
-# Récupérer la clé API depuis une variable d'environnement (plus sûr)
-API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY", "TRGGWIAC78TV3NRM")  # valeur par défaut en cas d'absence
-API_URL = "https://www.alphavantage.co/query"
+# Clé API Twelve Data (plus sûr via variable d'env)
+API_KEY = os.getenv("TWELVE_DATA_API_KEY", "fa3e77e6afe249bdbaddc937a5f6489e")
+API_URL = "https://api.twelvedata.com/time_series"
 
-PARAMS = {
-    "function": "TIME_SERIES_DAILY",
-    "symbol": "AAPL",
-    "apikey": API_KEY,
-    "outputsize": "compact"
-}
+def fetch_and_store_data(symbol="AAPL"):
+    cache_key = f"stocks:latest:{symbol}"
+    
+    if redis_client.exists(cache_key):
+        print("✅ Données chargées depuis Redis.")
+        return json.loads(redis_client.get(cache_key))
 
-def fetch_and_store_data():
+    params = {
+        "symbol": symbol,
+        "interval": "1day",
+        "outputsize": 30,
+        "apikey": API_KEY
+    }
+
     try:
-        response = requests.get(API_URL, params=PARAMS)
+        response = requests.get(API_URL, params=params)
         response.raise_for_status()
-
         data = response.json()
 
-        # Cas limite API dépassée (message dans la clé 'Information')
-        if "Information" in data:
-            print("Limite API dépassée ou autre erreur :", data["Information"])
-            # On ne remplace pas les données dans Redis pour garder l'ancien cache
-            return False
-
-        if "Time Series (Daily)" in data:
-            daily_data = data["Time Series (Daily)"]
-            # Stocker dans Redis avec expiration de 6h
-            redis_client.set("stocks:latest", json.dumps(daily_data), ex=timedelta(hours=6))
-            print("Données boursières récupérées et stockées dans Redis.")
-            return True
+        if "values" in data:
+            redis_client.set(cache_key, json.dumps(data["values"]), ex=timedelta(hours=6))
+            print("✅ Données récupérées depuis Twelve Data et stockées dans Redis.")
+            return data["values"]
         else:
-            print("Erreur inattendue dans la réponse API :", data)
-            return False
+            print("❌ Erreur dans la réponse Twelve Data :", data)
+            return None
 
-    except requests.exceptions.RequestException as e:
-        print(f"Erreur lors de la requête à l'API : {e}")
-        return False
+    except requests.RequestException as e:
+        print(f"❌ Erreur requête Twelve Data : {e}")
+        return None
 
 if __name__ == "__main__":
     fetch_and_store_data()
