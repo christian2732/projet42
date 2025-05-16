@@ -12,47 +12,47 @@ REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "ggtghykhucJrY6ydXraugdn0A7m5bmPT")
 REDIS_USE_TLS = os.getenv("REDIS_USE_TLS", "true").lower() == "true"
 
-# Connexion Redis avec TLS
+# Connexion Redis
 redis_client = redis.Redis(
     host=REDIS_HOST,
     port=REDIS_PORT,
     password=REDIS_PASSWORD,
     ssl=REDIS_USE_TLS,
-    ssl_cert_reqs=None  # TLS sans vérification stricte de certificat
+    ssl_cert_reqs=None  # Ne pas vérifier les certificats TLS (à éviter en prod)
 )
 
 # Clé API Twelve Data
-API_KEY = os.getenv("TWELVE_API_KEY", "your_twelve_data_api_key")
+API_KEY = os.getenv("TWELVE_API_KEY", "your_twelve_data_api_key")  # À définir correctement !
 
 @router.get("/data/stock/{symbol}", tags=["Stock"])
 def get_stock_by_symbol(symbol: str):
-    symbol = symbol.upper()
-    redis_key = f"stocks:latest:{symbol}"
+    redis_key = f"stocks:latest:{symbol.upper()}"
 
-    # Vérifie d'abord si les données sont en cache
+    # Vérifie si les données sont en cache Redis
     if redis_client.exists(redis_key):
         raw_data = redis_client.get(redis_key)
         return json.loads(raw_data)
 
-    # Requête vers Twelve Data
+    # Construire l'URL API avec le symbol
+    API_URL = "https://api.twelvedata.com/time_series"
     params = {
-        "symbol": symbol,
+        "symbol": symbol.upper(),
         "interval": "1day",
         "outputsize": 30,
         "apikey": API_KEY
     }
 
-    response = requests.get("https://api.twelvedata.com/time_series", params=params)
+    response = requests.get(API_URL, params=params)
 
     if response.status_code != 200:
-        return {"error": "Erreur lors de la récupération depuis Twelve Data."}
+        return {"error": f"Erreur API: {response.status_code}", "details": response.json()}
 
     data = response.json()
 
     if "values" not in data:
         return {"error": data.get("message", "Symbol non trouvé ou erreur API.")}
 
-    # Mise en cache pour 6h
+    # Mise en cache des données pour 6 heures
     redis_client.set(redis_key, json.dumps(data["values"]), ex=6 * 3600)
 
     return data["values"]
