@@ -4,6 +4,8 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 import time
 import os
 from dotenv import load_dotenv
+from redis_cache import redis_client
+
 
 # Importer directement les fichiers Python situés à la racine
 import ingest
