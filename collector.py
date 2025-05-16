@@ -4,8 +4,10 @@ import json
 import os
 from datetime import timedelta
 
+redis_host = os.getenv("REDIS_HOST")
+redis_port = int(os.getenv("REDIS_PORT", 17982))
 # Connexion Redis (adapter host/port si nécessaire)
-redis_client = redis.Redis(host="redis", port=17982, decode_responses=True)
+redis_client = redis.Redis(host="REDIS_HOST", port=17982, decode_responses=True)
 
 # Clé API Twelve Data (plus sûr via variable d'env)
 API_KEY = os.getenv("API_TOKEN", "fa3e77e6afe249bdbaddc937a5f6489e")
