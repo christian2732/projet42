@@ -2,10 +2,17 @@
 from fastapi import APIRouter, HTTPException
 import redis
 import json
-# from app.security.jwt import get_current_user  # Authentification supprimée
+import os  # Pour lire les variables d'environnement
 
 router = APIRouter()
-redis_client = redis.Redis(host="redis", port=6379, decode_responses=True)
+
+# Connexion à Redis via les variables d'environnement définies sur Render
+redis_client = redis.StrictRedis(
+    host=os.getenv("REDIS_HOST", "localhost"),  # fallback utile en local
+    port=int(os.getenv("REDIS_PORT", 6379)),
+    password=os.getenv("REDIS_PASSWORD"),
+    decode_responses=True
+)
 
 @router.get("/stocks", summary="Visualiser les données boursières", tags=["Visualisation"])
 def get_stocks():
