@@ -3,6 +3,10 @@ import json
 import os
 from datetime import timedelta
 from redis_cache import redis_client  # Import du client Redis configuré avec TLS et password
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 
 API_KEY = os.getenv("API_TOKEN", "fa3e77e6afe249bdbaddc937a5f6489e")
 API_URL = "https://api.twelvedata.com/time_series"
