@@ -12,8 +12,8 @@ API_KEY = os.getenv("API_TOKEN", "fa3e77e6afe249bdbaddc937a5f6489e")
 API_URL = "https://api.twelvedata.com/time_series"
 
 
-async def fetch_and_store_data(symbols: list = ["AAPL", "MSFT", "GOOGL"]):
-    """Stocke les données pour plusieurs symboles"""
+async def fetch_and_store_data(symbols: list = ["0xBTC/BTC", "0xBTC/ETH", "0xBTC/USD", "1000SATS/USD", "1INCH/BTC", "1INCH/INR", "1INCH/USD"]):
+    
     for symbol in symbols:
         cache_key = f"stocks:latest:{symbol.upper()}"
         
