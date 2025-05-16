@@ -3,47 +3,57 @@ import redis
 import requests
 import json
 import os
-from redis_cache import redis_client
+import ssl
 
 router = APIRouter()
 
-# Connexion Redis (assume que le service s'appelle "redis" dans Docker)
-redis_client = redis.Redis(host="redis", port=6379, decode_responses=True)
+# Configuration Redis avec TLS (Render.com)
+REDIS_HOST = os.getenv("REDIS_HOST", "oregon-keyvalue.render.com")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "ggtghykhucJrY6ydXraugdn0A7m5bmPT")
+REDIS_USE_TLS = os.getenv("REDIS_USE_TLS", "true").lower() == "true"
 
-# Clé API Alpha Vantage (en variable d’environnement de préférence)
-API_KEY = os.getenv("ALPHA_API_KEY", "TO4Y92A0HFPIZE1M")
-API_URL = "https://www.alphavantage.co/query"
+# Connexion Redis avec TLS
+redis_client = redis.Redis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    password=REDIS_PASSWORD,
+    ssl=REDIS_USE_TLS,
+    ssl_cert_reqs=None  # TLS sans vérification stricte de certificat
+)
+
+# API Twelve Data
+API_KEY = os.getenv("TWELVE_API_KEY", "your_twelve_data_api_key")  # à définir dans ton env
+API_URL = "https://api.twelvedata.com/time_series"
 
 @router.get("/data/stock/{symbol}", tags=["Stock"])
 def get_stock_by_symbol(symbol: str):
     redis_key = f"stocks:latest:{symbol.upper()}"
 
-    # Vérifie d'abord si les données sont déjà dans Redis
+    # Vérifie d'abord si les données sont en cache
     if redis_client.exists(redis_key):
         raw_data = redis_client.get(redis_key)
         return json.loads(raw_data)
 
-    # Sinon, appelle l'API Alpha Vantage
+    # Requête vers Twelve Data
     params = {
-        "function": "TIME_SERIES_DAILY",
         "symbol": symbol.upper(),
-        "apikey": API_KEY,
-        "outputsize": "compact"
+        "interval": "1day",
+        "outputsize": 30,
+        "apikey": API_KEY
     }
 
     response = requests.get(API_URL, params=params)
 
     if response.status_code != 200:
-        return {"error": "Erreur lors de la récupération depuis Alpha Vantage."}
+        return {"error": "Erreur lors de la récupération depuis Twelve Data."}
 
     data = response.json()
 
-    if "Time Series (Daily)" not in data:
-        return {"error": "Symbol non trouvé ou limite atteinte."}
+    if "values" not in data:
+        return {"error": data.get("message", "Symbol non trouvé ou erreur API.")}
 
-    daily_data = data["Time Series (Daily)"]
+    # Mise en cache pour 6h
+    redis_client.set(redis_key, json.dumps(data["values"]), ex=6 * 3600)
 
-    # Stocke les données dans Redis pour 6 heures
-    redis_client.set(redis_key, json.dumps(daily_data), ex=6 * 3600)
-
-    return daily_data
+    return data["values"]
