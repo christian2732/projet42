@@ -7,7 +7,8 @@ from redis_cache import redis_client  # Import du client Redis configuré avec T
 API_KEY = os.getenv("API_TOKEN", "fa3e77e6afe249bdbaddc937a5f6489e")
 API_URL = "https://api.twelvedata.com/time_series"
 
-def fetch_and_store_data(symbol="AAPL"):
+
+async def fetch_and_store_data(symbols: list = ["AAPL", "MSFT", "GOOGL"]):
     cache_key = f"stocks:latest:{symbol}"
     
     if redis_client.exists(cache_key):
