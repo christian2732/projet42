@@ -8,7 +8,7 @@ from datetime import timedelta
 redis_client = redis.Redis(host="redis", port=6379, decode_responses=True)
 
 # Récupérer la clé API depuis une variable d'environnement (plus sûr)
-API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY", "DZ86OSBDT5U9QPX8")  # valeur par défaut en cas d'absence
+API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY", "JRZ0NOET0V2NLA4S")  # valeur par défaut en cas d'absence
 API_URL = "https://www.alphavantage.co/query"
 
 PARAMS = {
