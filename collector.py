@@ -1,46 +1,49 @@
-
 import requests
 import redis
 import json
 import os
 from datetime import timedelta
 
-# Connexion Redis
+# Connexion Redis (host et port à adapter selon ton environnement)
 redis_client = redis.Redis(host="redis", port=6379, decode_responses=True)
 
-# Clé d'API Alpha Vantage (token)
-API_KEY = "DZ86OSBDT5U9QPX8"
+# Récupérer la clé API depuis une variable d'environnement (plus sûr)
+API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY", "DZ86OSBDT5U9QPX8")  # valeur par défaut en cas d'absence
 API_URL = "https://www.alphavantage.co/query"
 
-# Paramètres de la requête
 PARAMS = {
-    "function": "TIME_SERIES_DAILY",  # Choisir le type de données (ici, série temporelle quotidienne)
-    "symbol": "AAPL",  # Le symbole boursier (exemple ici avec Apple, change selon le besoin)
-    "apikey": API_KEY,  # La clé d'API Alpha Vantage
-    "outputsize": "compact"  # Récupérer uniquement les dernières 100 points de données
+    "function": "TIME_SERIES_DAILY",
+    "symbol": "AAPL",
+    "apikey": API_KEY,
+    "outputsize": "compact"
 }
 
 def fetch_and_store_data():
     try:
-        # Effectuer la requête à l'API Alpha Vantage
         response = requests.get(API_URL, params=PARAMS)
-        response.raise_for_status()  # Vérifie les erreurs de la requête
-        
-        # Extraire les données JSON de la réponse
+        response.raise_for_status()
+
         data = response.json()
-        
-        # Vérifier que les données sont dans le bon format
+
+        # Cas limite API dépassée (message dans la clé 'Information')
+        if "Information" in data:
+            print("Limite API dépassée ou autre erreur :", data["Information"])
+            # On ne remplace pas les données dans Redis pour garder l'ancien cache
+            return False
+
         if "Time Series (Daily)" in data:
             daily_data = data["Time Series (Daily)"]
-            
-            # Stocker les données dans Redis avec une expiration de 6 heures
+            # Stocker dans Redis avec expiration de 6h
             redis_client.set("stocks:latest", json.dumps(daily_data), ex=timedelta(hours=6))
             print("Données boursières récupérées et stockées dans Redis.")
+            return True
         else:
-            print("Erreur dans la récupération des données boursières:", data)
-    
+            print("Erreur inattendue dans la réponse API :", data)
+            return False
+
     except requests.exceptions.RequestException as e:
         print(f"Erreur lors de la requête à l'API : {e}")
+        return False
 
 if __name__ == "__main__":
     fetch_and_store_data()
