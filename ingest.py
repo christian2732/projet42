@@ -6,7 +6,7 @@ from redis_cache import redis_client
 router = APIRouter()
 
 
-@router.post("/", summary="Lancer l’ingestion boursière", tags=["Data Ingestion"])
+@router.post("/ingest", summary="Lancer l’ingestion boursière", tags=["Data Ingestion"])
 
 def ingest_data():
     try:
