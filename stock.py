@@ -24,7 +24,7 @@ redis_client = redis.Redis(
 
 # API Twelve Data
 API_KEY = os.getenv("TWELVE_API_KEY", "your_twelve_data_api_key")  # à définir dans ton env
-API_URL =  f"https://api.twelvedata.com/time_series?symbol={symbol}&interval=1min&apikey={API_KEY}""
+API_URL =  f"https://api.twelvedata.com/time_series?symbol={symbol}&interval=1min&apikey={API_KEY}
 
 @router.get("/data/stock/{symbol}", tags=["Stock"])
 def get_stock_by_symbol(symbol: str):
