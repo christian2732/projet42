@@ -8,7 +8,7 @@ from datetime import timedelta
 redis_client = redis.Redis(host="redis", port=17982, decode_responses=True)
 
 # Clé API Twelve Data (plus sûr via variable d'env)
-API_KEY = os.getenv("TWELVE_DATA_API_KEY", "fa3e77e6afe249bdbaddc937a5f6489e")
+API_KEY = os.getenv("API_TOKEN", "fa3e77e6afe249bdbaddc937a5f6489e")
 API_URL = "https://api.twelvedata.com/time_series"
 
 def fetch_and_store_data(symbol="AAPL"):
