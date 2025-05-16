@@ -52,4 +52,4 @@ def root():
 # ─── Inclusion des routes ──────────────────────────────────────────────────────
 app.include_router(ingest.router, prefix="/ingest", tags=["Data Ingestion"])
 app.include_router(visualization.router, prefix="/visualization", tags=["Data Visualization"])
-app.include_router(stock.router, tags=["Stock"])
+#app.include_router(stock.router, tags=["Stock"])
