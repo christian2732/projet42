@@ -13,7 +13,7 @@ r = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)
 
 @router.get("/data/{ticker}", summary="Lire les données d’un titre depuis Redis", tags=["Data Visualization"])
 def get_stock_data(ticker: str):
-    key = f"stock:{ticker.upper()}"
+    key = f"stocks:latest:{ticker.upper()}"
     data = r.get(key)
     if data is None:
         raise HTTPException(status_code=404, detail=f"Données introuvables pour le ticker '{ticker}'.")

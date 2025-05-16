@@ -16,7 +16,7 @@ API_URL = "https://www.alphavantage.co/query"
 
 @router.get("/data/stock/{symbol}", tags=["Stock"])
 def get_stock_by_symbol(symbol: str):
-    redis_key = f"stocks:{symbol.upper()}"
+    redis_key = f"stocks:latest:{symbol.upper()}"
 
     # Vérifie d'abord si les données sont déjà dans Redis
     if redis_client.exists(redis_key):
