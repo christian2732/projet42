@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends
 from index_service import get_mock_indices
 from redis_cache import get_cache, set_cache
+from redis_cache import redis_client
+
 #from app.auth.auth_bearer import JWTBearer
 
 router = APIRouter()

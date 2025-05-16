@@ -1,6 +1,7 @@
 
 from fastapi import APIRouter, HTTPException
 from collector import fetch_and_store_data
+from redis_cache import redis_client
 
 router = APIRouter()
 

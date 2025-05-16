@@ -1,22 +1,27 @@
-# Objectif : Utilitaire pour lire/écrire dans Redis
-
-import redis
-import json
 import os
+import redis
 
-# Connexion Redis (localhost ou docker hostname si réseau Docker)
 redis_host = os.getenv("REDIS_HOST", "localhost")
 redis_port = int(os.getenv("REDIS_PORT", 6379))
+redis_password = os.getenv("REDIS_PASSWORD", None)
+use_tls = os.getenv("REDIS_USE_TLS", "false").lower() == "true"
 
-redis_client = redis.Redis(host=redis_host, port=redis_port, db=0, decode_responses=True)
+redis_client = redis.Redis(
+    host=redis_host,
+    port=redis_port,
+    password=redis_password,
+    decode_responses=True,
+    ssl=use_tls
+)
 
-def get_cache(key: str):
-    """Retourne les données du cache si disponibles"""
-    value = redis_client.get(key)
-    if value:
-        return json.loads(value)
-    return None
+def test_redis_connection():
+    try:
+        redis_client.ping()
+        print("✅ Connexion Redis TLS réussie !")
+    except redis.exceptions.AuthenticationError:
+        print("❌ Erreur : mot de passe Redis incorrect ou authentification requise.")
+    except redis.exceptions.ConnectionError:
+        print("❌ Erreur : impossible de se connecter à Redis.")
 
-def set_cache(key: str, value: dict, expiration: int = 300):
-    """Met en cache des données pour expiration secondes (par défaut 5 minutes)"""
-    redis_client.set(key, json.dumps(value), ex=expiration)
+if __name__ == "__main__":
+    test_redis_connection()

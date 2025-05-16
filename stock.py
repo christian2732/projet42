@@ -3,6 +3,7 @@ import redis
 import requests
 import json
 import os
+from redis_cache import redis_client
 
 router = APIRouter()
 

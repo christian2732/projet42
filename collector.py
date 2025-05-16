@@ -1,13 +1,8 @@
 import requests
-import redis
 import json
 import os
 from datetime import timedelta
-
-redis_host = os.getenv("REDIS_HOST")
-redis_port = int(os.getenv("REDIS_PORT", 6379))
-
-redis_client = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)
+from redis_cache import redis_client  # Import du client Redis configuré avec TLS et password
 
 API_KEY = os.getenv("API_TOKEN", "fa3e77e6afe249bdbaddc937a5f6489e")
 API_URL = "https://api.twelvedata.com/time_series"
